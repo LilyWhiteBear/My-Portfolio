@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Port</title>
+    <script src="js/pixi.min.js"></script>
+    <script>
+        var appWidth = 1000;
+        var appHeight = 1500;
+        var windowWidth = window.screen.width;
+        var windowHeight = window.screen.height;
+        let portTextAnimate = [];
+        let portTextMove = [];
+        const style = new PIXI.TextStyle({
+            dropShadow: true,
+            fill: [
+                "green",
+                "yellow"
+            ],
+            fontFamily: "Comic Sans MS",
+            fontSize: 100,
+            fontStyle: "italic",
+            fontWeight: "bold"
+        });
+        const style2 = new PIXI.TextStyle({
+            dropShadow: true,
+            fill: "red",
+            fontFamily: "Courier New",
+            fontSize: 50,
+            fontWeight: "bold"
+        });
+        const styleHeader = new PIXI.TextStyle({
+            fontFamily: "Courier New",
+            fontSize: 60,
+            fontWeight: "bold"
+        });
+        const styleNormal = new PIXI.TextStyle({
+            fontFamily: "Courier New",
+            fontSize: 35,
+            fontWeight: "bold"
+        });
+        const styleWrap = new PIXI.TextStyle({
+            fontFamily: "Courier New",
+            fontSize: 35,
+            fontWeight: "bold",
+            wordWrap: true,
+            wordWrapWidth: appWidth * 0.6
+        });
+        const styleWrapFull = new PIXI.TextStyle({
+            fontFamily: "Courier New",
+            fontSize: 35,
+            fontWeight: "bold",
+            wordWrap: true,
+            wordWrapWidth: appWidth * 0.98
+        });
+
+        let pageArray = [];
+        let currentPage = 0;
+        let maxPage = -1;
+        let statusArray = [];
+        let statusValue = [10, 10, 10, 10];
+
+        let buttonPrev;
+        let buttonNext;
+
+        let clickText;
+        let running;
+        let runTexture1;
+        let runTexture2;
+
+        let tick = 0;
+
+        window.onload = function () {
+            app = new PIXI.Application(
+                {
+                    width: 1000,
+                    height: 1700,
+                    backgroundColor: 0xffffff
+                }
+            );
+            document.body.appendChild(app.view);
+
+            let background = new PIXI.Graphics();
+            background.beginFill(0xAAAAAA);
+            background.drawRect(0, 0, appWidth, appHeight + 300);
+            app.stage.addChild(background);
+
+            buttonPrev = new PIXI.Sprite.from("img/buttonPrev.png");
+            buttonPrev.x = 0;
+            buttonPrev.y = appHeight;
+            buttonPrev.interactive = true;
+            buttonPrev.buttonMode = true;
+            buttonPrev.on('pointerdown', function () {
+                if(currentPage > 0){
+                    pageArray[currentPage].visible = false;
+                    currentPage--;
+                    pageArray[currentPage].visible = true;
+                }
+            });
+            app.stage.addChild(buttonPrev);
+
+            buttonNext = new PIXI.Sprite.from("img/buttonNext.png");
+            buttonNext.x = appWidth - 200;
+            buttonNext.y = appHeight;
+            buttonNext.interactive = true;
+            buttonNext.buttonMode = true;
+            buttonNext.on('pointerdown', function () {
+                if(currentPage < maxPage){
+                    pageArray[currentPage].visible = false;
+                    currentPage++;
+                    pageArray[currentPage].visible = true;
+                }
+            });
+            app.stage.addChild(buttonNext);
+
+            //home scrren
+            let homeScreen = new PIXI.Container();
+            app.stage.addChild(homeScreen);
+            homeScreen.visible = true;
+            pageArray.push(homeScreen);
+            maxPage++;
+
+            let bg = new PIXI.Sprite.from("bg/background.png");
+            homeScreen.addChild(bg);
+
+            let ticker1 = new PIXI.Ticker();
+            ticker1.autoStart = true;
+            ticker1.add(homeAnimate);
+
+            runTexture1 = PIXI.Texture.from("img/running1.png");
+            runTexture2 = PIXI.Texture.from("img/running2.png");
+            running = new PIXI.Sprite(runTexture1);
+            running.x = appWidth * -0.2;
+            running.y = appHeight * 0.5;
+            homeScreen.addChild(running);
+
+            clickText = new PIXI.Text("-click anywhere to start-", style2);
+            clickText.anchor.set(0.5);
+            clickText.x = appWidth / 2;
+            clickText.y = appHeight * 0.8;
+            homeScreen.addChild(clickText);
+
+            let portText = 'PORTFOLIO';
+            for (let i in portText) {
+                let text = new PIXI.Text(portText[i], style);
+                text.anchor.set(0.5);
+                text.x = appWidth * 0.18 + i * appWidth * 0.08;
+                text.y = appHeight * 0.2;
+                portTextAnimate.push(text);
+                portTextMove.push(i % 2);
+                homeScreen.addChild(text);
+            }
+
+            homeScreen.interactive = true;
+            homeScreen.on('pointerdown', function () {
+                homeScreen.visible = false;
+                page1.visible = true;
+                currentPage++;
+            });
+
+            //page 1
+            let page1 = new PIXI.Container();
+            app.stage.addChild(page1);
+            page1.visible = false;
+            pageArray.push(page1);
+            maxPage++;
+
+            let name =  new PIXI.Text("THIANRAWIT SIRISAKORNSAKUL", styleHeader);
+            name.x = 0;
+            name.y = 0;
+            page1.addChild(name);
+
+            let major = new PIXI.Text("Major: Applied Computer Science", styleNormal);
+            major.x = 0;
+            major.y = appHeight * 0.05;
+            page1.addChild(major);
+
+            let u = new PIXI.Text("King Mongkut's University of Technology Thonburi", styleNormal);
+            u.x = 0;
+            u.y = appHeight * 0.1;
+            u.width = appWidth;
+            page1.addChild(u);         
+
+            let email = new PIXI.Text("email: thianrawit.lily@mail.kmutt.ac.th", styleNormal);
+            email.x = 0;
+            email.y = appHeight * 0.15;
+            page1.addChild(email);
+
+            let phone = new PIXI.Text("phone: 0853681428", styleNormal);
+            phone.x = 0;
+            phone.y = appHeight * 0.2;
+            page1.addChild(phone);
+
+            let skill = new PIXI.Text("Skill", styleHeader);
+            skill.x = appWidth * 0.5;
+            skill.y = appHeight * 0.25;
+            page1.addChild(skill);
+
+            let cpp = new PIXI.Text("C++", styleNormal);
+            cpp.x = appWidth * 0.5;
+            cpp.y = appHeight * 0.3;
+            page1.addChild(cpp);
+
+            let js = new PIXI.Text("JS", styleNormal);
+            js.x = appWidth * 0.5;
+            js.y = appHeight * 0.35;
+            page1.addChild(js);
+
+            let python = new PIXI.Text("Python", styleNormal);
+            python.x = appWidth * 0.5;
+            python.y = appHeight * 0.4;
+            page1.addChild(python);
+
+            let sql = new PIXI.Text("SQL", styleNormal);
+            sql.x = appWidth * 0.5;
+            sql.y = appHeight * 0.45;
+            page1.addChild(sql);
+
+            let profile = new PIXI.Sprite.from("/img/profile_pic.jpg");
+            profile.x = appWidth * 0.07;
+            profile.y = appHeight * 0.25;
+            page1.addChild(profile);
+
+            let statusPointRemain = new PIXI.Text("Remaining Point(s)", styleNormal);
+            statusPointRemain.x = appWidth * 0.5;
+            statusPointRemain.y = appHeight * 0.5;
+            page1.addChild(statusPointRemain);
+
+            let statusPoint = 10;
+            let statusPointText = new PIXI.Text(statusPoint, styleNormal);
+            statusPointText.x = appWidth * 0.9;
+            statusPointText.y = appHeight * 0.5;
+            page1.addChild(statusPointText);
+
+            for(let i=0; i < 4; i++){
+                let status = new PIXI.Text(statusValue[i], styleNormal);
+                status.x = appWidth * 0.8;
+                status.y = appHeight * 0.3 + i * appHeight * 0.05;
+                page1.addChild(status);
+                statusArray.push(status);
+
+                let down = new PIXI.Text("-", styleNormal);
+                down.x = appWidth * 0.9;
+                down.y = appHeight * 0.3 + i * appHeight * 0.05;
+                down.interactive = true;
+                down.buttonMode = true;
+                down.on('pointerdown', function () {
+                    if(statusValue[i] > 10){
+                        statusValue[i]--;
+                        statusArray[i].text = statusValue[i];
+                        statusPoint++;
+                        statusPointText.text = statusPoint;
+                    }
+                });
+                page1.addChild(down);
+
+                let up = new PIXI.Text("+", styleNormal);
+                up.x = appWidth * 0.95;
+                up.y = appHeight * 0.3 + i * appHeight * 0.05;
+                up.interactive = true;
+                up.buttonMode = true;
+                up.on('pointerdown', function () {
+                    if(statusPoint > 0){
+                        statusValue[i]++;
+                        statusArray[i].text = statusValue[i];
+                        statusPoint--;
+                        statusPointText.text = statusPoint;
+                    }
+                });
+                page1.addChild(up);
+            }
+
+            let ability = new PIXI.Text("Ability", styleHeader);
+            ability.x = appWidth * 0.05;
+            ability.y = appHeight * 0.6;
+            page1.addChild(ability);
+
+            let ability_img = new PIXI.Sprite.from("/img/algo.jpg");
+            ability_img.x = appWidth * 0.05;
+            ability_img.y = appHeight * 0.65;
+            ability_img.width = appWidth * 0.25;
+            ability_img.height = appHeight * 0.1;
+            page1.addChild(ability_img);
+
+            let ability1 = new PIXI.Text("Algorithms Expert.", styleHeader);
+            ability1.x = appWidth * 0.35;
+            ability1.y = appHeight * 0.65;
+            page1.addChild(ability1);
+
+            let ability1_desc = new PIXI.Text("[Passive] Slightly increase your application speed.", styleWrap);
+            ability1_desc.x = appWidth * 0.35;
+            ability1_desc.y = appHeight * 0.69;
+            page1.addChild(ability1_desc);
+
+            let ability2_img = new PIXI.Sprite.from("/img/imagine.jpg");
+            ability2_img.x = appWidth * 0.05;
+            ability2_img.y = appHeight * 0.77;
+            ability2_img.width = appWidth * 0.25;
+            ability2_img.height = appHeight * 0.1;
+            page1.addChild(ability2_img);
+
+            let ability2 = new PIXI.Text("Imaginationer.", styleHeader);
+            ability2.x = appWidth * 0.35;
+            ability2.y = appHeight * 0.75;
+            page1.addChild(ability2);
+
+            let ability2_desc = new PIXI.Text("[Active] After use, will receive new idea within several hours, cooldown a couple of weeks.", styleWrap);
+            ability2_desc.x = appWidth * 0.35;
+            ability2_desc.y = appHeight * 0.79;
+            page1.addChild(ability2_desc);
+
+            let ability3_img = new PIXI.Sprite.from("/img/read.jpg");
+            ability3_img.x = appWidth * 0.05;
+            ability3_img.y = appHeight * 0.89;
+            ability3_img.width = appWidth * 0.25;
+            ability3_img.height = appHeight * 0.1;
+            page1.addChild(ability3_img);
+
+            let ability3 = new PIXI.Text("Reading Master.", styleHeader);
+            ability3.x = appWidth * 0.35;
+            ability3.y = appHeight * 0.9;
+            page1.addChild(ability3);
+
+            let ability3_desc = new PIXI.Text("[Passive] Make you can read super fast!!", styleWrap);
+            ability3_desc.x = appWidth * 0.35;
+            ability3_desc.y = appHeight * 0.94;
+            page1.addChild(ability3_desc);
+
+            //page 2
+            let page2 = new PIXI.Container();
+            app.stage.addChild(page2);
+            page2.visible = false;
+            pageArray.push(page2);
+            maxPage++;
+
+            let proj =  new PIXI.Text("Project : Kho Huai v1 (2020)", styleHeader);
+            proj.x = 0;
+            proj.y = 0;
+            page2.addChild(proj);
+
+            let kh_textureArray = [];
+            let textureNum = 0;
+            let textureMax = 8;
+
+            for(let i=1; i <= textureMax; i++){
+                let kh_texture = PIXI.Texture.from("img/khohuai/kho-huai-v1-" + i + ".jpg");
+                kh_textureArray.push(kh_texture);
+            }
+            textureMax--;
+
+            let kho_huai_img = new PIXI.Sprite(kh_textureArray[0]);
+            kho_huai_img.x = appWidth * 0.05;
+            kho_huai_img.y = appHeight * 0.1;
+            kho_huai_img.width = 900;
+            kho_huai_img.height = 500;
+            kho_huai_img.interactive = true;
+            kho_huai_img.buttonMode = true;
+            kho_huai_img.on('pointerdown', function() {
+                if(textureMax > textureNum){
+                    textureNum++;
+                    kho_huai_img.texture = kh_textureArray[textureNum];
+                }
+                else{
+                    textureNum = 0;
+                    kho_huai_img.texture = kh_textureArray[textureNum];
+                }
+            });
+            page2.addChild(kho_huai_img);
+
+            let advice_text1 = new PIXI.Text("Click at image to see next image", styleNormal);
+            advice_text1.anchor.set(0.5);
+            advice_text1.x = appWidth * 0.5;
+            advice_text1.y = appHeight * 0.45;
+            page2.addChild(advice_text1);
+
+            let desc_text1 = new PIXI.Text("    Kho Huai v1 is prototype Web App that developed base on Nodejs and use MongoDB as database. This website have function to login, register, search, add to cart, buy lotteries and also have admin system but with limitation of time, knowdledge (on that time) and only 2 developers that developed this project so this website still doesn't connect with payment gateway API so I decided to continue develope another version of Kho Huai that is under developing now.", styleWrapFull);
+            desc_text1.x = appWidth * 0.01;
+            desc_text1.y = appHeight * 0.5;
+            page2.addChild(desc_text1);
+
+            let link1 = new PIXI.Text("link to website.", styleNormal);
+            link1.anchor.set(0.5);
+            link1.x = appWidth * 0.5;
+            link1.y = appHeight * 0.85;
+            link1.interactive = true;
+            link1.buttonMode = true;
+            link1.on('pointerdown', function() {
+                window.open('https://khohuai.herokuapp.com/');
+            });
+            page2.addChild(link1);
+
+            let link2 = new PIXI.Text("link to source code (git hub).", styleNormal);
+            link2.anchor.set(0.5);
+            link2.x = appWidth * 0.5;
+            link2.y = appHeight * 0.9;
+            link2.interactive = true;
+            link2.buttonMode = true;
+            link2.on('pointerdown', function() {
+                window.open('https://github.com/LilyWhiteBear/khohuai');
+            });
+            page2.addChild(link2);
+
+            //page 3
+            let page3 = new PIXI.Container();
+            app.stage.addChild(page3);
+            page3.visible = false;
+            pageArray.push(page3);
+            maxPage++;
+
+            let proj2 =  new PIXI.Text("Project : Pianoforte (2021)", styleHeader);
+            proj2.x = 0;
+            proj2.y = 0;
+            page3.addChild(proj2);
+
+            let pf_textureArray = [];
+            let textureNum2 = 0;
+            let textureMax2 = 4;
+
+            for(let i=1; i <= textureMax2; i++){
+                let pf_texture = PIXI.Texture.from("img/pianoforte/pianoforte-" + i + ".jpg");
+                pf_textureArray.push(pf_texture);
+            }
+            textureMax2--;
+
+            let pianoforte_img = new PIXI.Sprite(pf_textureArray[0]);
+            pianoforte_img.anchor.set(0.5);
+            pianoforte_img.x = appWidth * 0.5;
+            pianoforte_img.y = appHeight * 0.35;
+            pianoforte_img.width = 400;
+            pianoforte_img.height = 800;
+            pianoforte_img.interactive = true;
+            pianoforte_img.buttonMode = true;
+            pianoforte_img.on('pointerdown', function() {
+                if(textureMax2 > textureNum2){
+                    textureNum2++;
+                    pianoforte_img.texture = pf_textureArray[textureNum2];
+                }
+                else{
+                    textureNum2 = 0;
+                    pianoforte_img.texture = pf_textureArray[textureNum2];
+                }
+                
+            });
+            page3.addChild(pianoforte_img);
+
+            let advice_text2 = new PIXI.Text("Click at image to see next image", styleNormal);
+            advice_text2.anchor.set(0.5);
+            advice_text2.x = appWidth * 0.5;
+            advice_text2.y = appHeight * 0.65;
+            page3.addChild(advice_text2);
+
+            let desc_text2 = new PIXI.Text("    Pianoforte is rythm game part of Kho Huai v2. I developed this game by pixiJS and still on developing. Full game might included tutorial, improved UI, game effect that make harder itself but will give player score boost and some SFX when tapping.", styleWrapFull);
+            desc_text2.x = appWidth * 0.01;
+            desc_text2.y = appHeight * 0.7;
+            page3.addChild(desc_text2);
+
+            let link3 = new PIXI.Text("link to Pianoforte source code (git hub).", styleNormal);
+            link3.anchor.set(0.5);
+            link3.x = appWidth * 0.5;
+            link3.y = appHeight * 0.9;
+            link3.interactive = true;
+            link3.buttonMode = true;
+            link3.on('pointerdown', function() {
+                window.open('https://github.com/LilyWhiteBear/test-pixi');
+            });
+            page3.addChild(link3);
+
+            let link4 = new PIXI.Text("link to Kho Huai v2 source code (git hub).", styleNormal);
+            link4.anchor.set(0.5);
+            link4.x = appWidth * 0.5;
+            link4.y = appHeight * 0.95;
+            link4.interactive = true;
+            link4.buttonMode = true;
+            link4.on('pointerdown', function() {
+                window.open('https://github.com/LilyWhiteBear/khohuai-v2');
+            });
+            page3.addChild(link4);
+
+            //last page
+            let last_page = new PIXI.Container();
+            app.stage.addChild(last_page);
+            last_page.visible = false;
+            pageArray.push(last_page);
+            maxPage++;
+
+            let end =  new PIXI.Text("Thank you for time and consideration.", styleHeader);
+            end.anchor.set(0.5);
+            end.x = appWidth * 0.5;
+            end.y = appWidth * 0.5;
+            end.width = appWidth;
+            last_page.addChild(end);
+
+            let end2 =  new PIXI.Text(" I look forward to hearing from you soon.", styleHeader);
+            end2.anchor.set(0.5);
+            end2.x = appWidth * 0.5;
+            end2.y = appWidth * 0.7;
+            end2.width = appWidth * 0.9;
+            last_page.addChild(end2);
+            
+        }
+
+        function homeAnimate() {
+            tick++;
+            if(tick % 20 === 0) {
+                if(clickText.visible) clickText.visible = false;
+                else if(!clickText.visible) clickText.visible = true;
+
+                if(running.x < appWidth * 1.1){
+                    running.x += 50;
+                    if(tick % 40 === 0){
+                        running.texture = runTexture2;
+                    }
+                    else{
+                        running.texture = runTexture1;
+                    }
+                }
+                else{
+                    running.x = appWidth * -0.1;
+                }
+            }
+            for (let i in portTextAnimate) {
+                if (portTextMove[i] === 0) {
+                    if (portTextAnimate[i].y < appHeight * 0.205) {
+                        portTextAnimate[i].y += 1;
+                    }
+                    else {
+                        portTextAnimate[i].y -= 1;
+                        portTextMove[i] = 1;
+                    }
+                }
+                else if (portTextMove[i] === 1) {
+                    if (portTextAnimate[i].y > appHeight * 0.195) {
+                        portTextAnimate[i].y -= 1;
+                    }
+                    else {
+                        portTextAnimate[i].y += 1;
+                        portTextMove[i] = 0;
+                    }
+                }
+            }
+        }
+    </script>
+</head>
